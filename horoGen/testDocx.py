@@ -1,25 +1,28 @@
+# coding=utf-8
 from docx import Document
 import xlrd
 import unittest
 
 class TestHoroInput(unittest.TestCase):
 
+	def setUp(self):
+		self.input = HoroInput()
+		self.input.load('input.xlsx')
+
 	def testSanity(self):
-		input = HoroInput()
-		input.load('input.xlsx')
-		self.assertEqual(['Sheet1'], input.getReportNames())
+		self.assertEqual(['Sheet1'], self.input.getReportNames())
 		
-	def testGetSectionNames(self):
-		input = HoroInput()
-		input.load('input.xlsx')
-		self.assertEqual('Header', input.getSection()[0]['title'])
+	def testGetParagraphInfo(self):
+		self.assertEqual('Section', self.input.getType(0))
+		self.assertEqual(u'Đường đi', self.input.getValue(0))
+		self.assertEqual('Paragraph', self.input.getType(1))
+		self.assertDictEqual({'sheet': 1.1, 'value': 1}, self.input.getValue(1))
+
 
 class HoroInput():
 
 	def __init__(self):
 		self._reportNames = []
-		self._maxRow = 500
-		self._maxCol = 500
 
 	def load(self, filename):
 		self._workbook = xlrd.open_workbook(filename)
@@ -27,21 +30,38 @@ class HoroInput():
 		for name in self._reportNames:
 			self._loadSection(name)
 
-	def getSection(self):
-		return self._section
+	def getInputCount(self):
+		return len(self._rawInput)
+
+	def getType(self, row):
+		return self._rawInput[row]['type']
+
+	def getValue(self, row):
+		return self._rawInput[row]['value']
 
 	def _loadSection(self, sheet_name):
-		self._section = []
+		self._rawInput = []
 		sheet = self._workbook.sheet_by_name(sheet_name)
-		for row in range(self._maxRow):
-			self._section.append({'title': sheet.cell_value(row, 1)})
-
+		for row in range(sheet.nrows):
+			firstCol = sheet.cell_value(row, 0)
+			secondCol = sheet.cell_value(row, 1)
+			if firstCol == 'Section':
+				typeValue = 'Section'
+				dataValue = secondCol
+			else:
+				typeValue = 'Paragraph'
+				dataValue = {
+					'sheet': firstCol,
+					'value': secondCol
+				}
+			self._rawInput.append({
+				'type': typeValue,
+				'value': dataValue
+				})
 
 	def getReportNames(self):
 		return self._reportNames
-
-	def getStructure(self):
-		return self._structure
+		
 
 class ExcelReader():
 
