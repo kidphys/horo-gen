@@ -3,6 +3,7 @@ import unittest
 from horoscope import HoroInput
 from horoscope import HoroReport
 from horoscope import HoroDocument
+from horoscope import ExcelReader
 
 
 class TestDocxGen(unittest.TestCase):
@@ -42,6 +43,7 @@ class TestHoroReport(unittest.TestCase):
 		self.report = HoroReport()
 		self.input = HoroInput()
 		self.input.load('input.xlsx')
+		content = [['Section']]
 		self.report.loadDataSource('AstroReport_Content.xlsx')
 		self.content = self.report.loadContentUsing(self.input.getReport('Sheet1'))
 
@@ -70,6 +72,15 @@ class TestHoroInput(unittest.TestCase):
 	def setUp(self):
 		self.input = HoroInput()
 		self.input.load('input.xlsx')
+		self.data = [['Section', u'Tình yêu'],
+				[1.1, 1], [2.1, 3]]
+		self.content = [{'Section': u'Tình yêu'},
+					{'Paragraph': {'sheet': 1.1, 'value': 1}}]
+
+	def testCleanInput(self):
+		actual = self.input.clean(self.data)
+		self.assertEqual(self.content[0], actual[0])
+		self.assertDictEqual(self.content[1], actual[1])
 
 	def testSanity(self):
 		self.assertEqual(['Sheet1'], self.input.getReportNames())
@@ -80,6 +91,17 @@ class TestHoroInput(unittest.TestCase):
 		self.assertEqual(u'Tình yêu', input[0]['value'])
 		self.assertEqual('Paragraph', input[1]['type'])
 		self.assertDictEqual({'sheet': 1.1, 'value': 1}, input[1]['value'])
+
+
+class TestExcelReader(unittest.TestCase):
+
+	def testSanity(self):
+		input = ExcelReader('input.xlsx')
+		self.assertEqual(['Sheet1'], input.getSheets())
+		content = input.getSheetContent('Sheet1')
+		self.assertEqual(8, len(content))
+		self.assertEqual('Section', content[0][0])
+		self.assertEqual(u'Tình yêu', content[0][1])
 
 
 if __name__ == '__main__':

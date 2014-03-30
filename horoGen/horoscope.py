@@ -67,6 +67,25 @@ class HoroInput():
 		for name in self._reportNames:
 			self._report[name] = self._loadSection(name)
 
+	def _isValidParagraphInput(self, row):
+		if row[0] is not None and row[1] is not None:
+			return True
+		else:
+			return False
+
+	def clean(self, data):
+		res = []
+		for item in data:
+			if item[0] == 'Section':
+				res.append({'Section': item[1]})
+			else:
+				if self._isValidParagraphInput(item):
+					res.append({'Paragraph': {
+							'sheet': item[0],
+							'value': item[1]
+						}})
+		return res
+
 	def getReportNames(self):
 		return self._reportNames
 
@@ -93,3 +112,21 @@ class HoroInput():
 				'value': dataValue
 				})
 		return data
+
+class ExcelReader():
+
+	def __init__(self, filename):
+		self._workbook = xlrd.open_workbook(filename)
+
+	def getSheets(self):
+		return self._workbook.sheet_names()	
+
+	def getSheetContent(self, sheetName):
+		sheet = self._workbook.sheet_by_name(sheetName)
+		content = []
+		for row in range(sheet.nrows):
+			rowContent = []
+			for col in range(sheet.ncols):
+				rowContent.append(sheet.cell_value(row, col))
+			content.append(rowContent)			
+		return content
