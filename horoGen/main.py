@@ -1,6 +1,8 @@
 from horoscope import HoroInput
 from horoscope import HoroReport
 from horoscope import HoroDocument
+import os
+import sys
 import logging
 
 def getLogger(name):
@@ -17,11 +19,20 @@ mainLogger = getLogger('Main')
 def testLogger():
 	mainLogger.info('Printing logg')
 
+def getCurrentPah():
+	# determine if application is a script file or frozen exe
+	if getattr(sys, 'frozen', False):
+	    application_path = os.path.dirname(sys.executable)
+	elif __file__:
+	    application_path = os.path.dirname(__file__)
+	return application_path
+
 def printDefaultReport():
+	currentPath = getCurrentPah()
 	input = HoroInput()
-	input.load('input.xlsx')
+	input.load(currentPath + 'input.xlsx')
 	report = HoroReport()
-	report.loadDataSource('AstroReport_Content.xlsx')
+	report.loadDataSource(currentPath + 'AstroReport_Content.xlsx')
 	
 	# print all sheets to docx	
 	reportNames = input.getReportNames()
